@@ -1,0 +1,36 @@
+While testing moneywallet for my use case I noticed that the expected
+balances at the end of the import of several years worth of transactions
+was off by a few to a few dozen cents.
+
+Since the monyewallet project is open sourced, I looked at the source
+code to determine what might be wrong. It turns out that transactions
+are stored as long integer values internally, while the CSV export /
+import writes out / reads in floating point decimal numbers. 
+
+Ah ha! Rounding error!
+
+This test case has a few of the decimal values which were imported with
+rounding (down) errors.
+
+The descriptions have the correct two digit decimal value. Changing the 
+CAD $1.99 two digit decimal money to a currency with 3 or 4 decimals will
+help diagnose the rounding issues with these values.
+
+From the currencies.json file: the Dinar based currencies have three
+decimals (ie KWD) but the numbers are not 0-9 which wasn't helpful for me. Hence
+I created a custom currency using 3 or 4 decimal places to read my $CAD.99
+import values to illustrate the rounding issues.
+
+# java  checkImport -139.92
+Importing line
+Source Value = -139.92
+
+Without Rounding Up: Imported Double Value = -139.920000
+Without Rounding Up: Imported Long Value = -13991
+
+With Rounding Up: Imported Double Value = -139.925000
+With Rounding Up: Imported Long Value = -13992
+
+Source Value = -139.92, difference = 1
+
+	
